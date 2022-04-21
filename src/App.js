@@ -4,6 +4,7 @@ import TodoList from './TodoList'
 
 function App() {
   const [newTodo, setNewTodo] = React.useState('');
+ // const [todoList, setTodoList] = React.useState([]);
   return (
     <div>
       <h1>Todo List</h1>
