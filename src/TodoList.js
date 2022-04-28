@@ -1,33 +1,9 @@
 import React from 'react';
 import TodoListItem from './TodoListItem';
 
-/*
-const todoList = [
-    {
-      id: 1,
-      title: 'Setup the IDE'
-    },
-    {
-      id: 2,
-      title: 'Create a new folder'
-    },
-    {
-      id: 3,
-      title:'Initiate the new React App'
-    },
-    {
-      id: 4,
-      title: 'Start working'
-    },
-    {
-      id: 5,
-      title: 'Have fun!'
-    }
-];
-*/
-
+//This renders the entire list 
 const TodoList = ({todoList}) => {
-  console.log(`this are the props from TodoList => ${todoList}`)
+  console.log(todoList)
     return (
         <ul>
         {todoList.map(function (todo) {
