@@ -1,12 +1,11 @@
 import React from "react";
 import AddTodoForm from "./Components/AddTodoForm";
 import TodoList from "./Components/TodoList";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 //Challenges for this lesson:
-//1.[x]Setup Airtable account.
-//2.[x]Create Enviroment File.
-//3.[x]Generate Airtable API Key.
-//4.[x]Connect to Airtable API.
-//5.[x]Fetch Data from Airtable.
+//1.[x]Install React Router.
+//2.[x]Setup Router.
+//3.[x]Add New Route.
 
 const App = () => {
   //This state renders our list with user input, and saved the value in the local storage
@@ -58,15 +57,21 @@ const App = () => {
   };
 
   return (
-    <>
-      <h1>Todo List</h1>
-      <AddTodoForm onAddTodo={addTodo} todoList={todoList} />
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <TodoList todoList={todoList} onRemoveTodo={removeTodo} />
-      )}
-    </>
+    <Router>
+      <h1>Todo List Project</h1>
+      <Routes>
+        <Route
+          index
+          exact
+          path="/"
+          element={<TodoList todoList={todoList} onRemoveTodo={removeTodo} />}
+        />
+        <Route
+          path="/new"
+          element={<AddTodoForm onAddTodo={addTodo} todoList={todoList} />}
+        />
+      </Routes>
+    </Router>
   );
 };
 
