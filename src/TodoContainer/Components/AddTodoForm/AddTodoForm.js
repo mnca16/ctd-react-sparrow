@@ -1,8 +1,11 @@
 import React from "react";
-import InputWithLabel from "./InputWithLabel";
+import InputWithLabel from "../InputWithLabel/InputWithLabel";
+import style from "./AddTodoForm.module.css";
+import { ReactComponent as AddIcon } from "../IconsComponents/addTask+.svg";
+import PropTypes from "prop-types";
 
 //This component renders the form (input field)
-const AddTodoForm = ({ onAddTodo, todoList }) => {
+const AddTodoForm = ({ onAddTodo, tableId }) => {
   //This state controls the input field (it makes this component a controlled component)
   let [todoTitle, setTodoTitle] = React.useState("");
 
@@ -22,29 +25,35 @@ const AddTodoForm = ({ onAddTodo, todoList }) => {
       alert("Input field is empty");
     } else {
       //The prop "onAddTodo" is the callback function from the parent component (App) with new state
-      onAddTodo({
-        fields: {
-          Title: todoTitle,
+      onAddTodo(
+        {
+          fields: {
+            Title: todoTitle,
+            Description: todoTitle.Description,
+          },
         },
-      });
+        tableId
+      );
       setTodoTitle("");
     }
   };
 
   return (
-    <>
-      <h1>New Todo List</h1>
-      <form onSubmit={handleAddTodo}>
-        <InputWithLabel
-          todoTitle={todoTitle}
-          handleTitleChange={handleTitleChange}
-        >
-          Title
-        </InputWithLabel>
-        <button type="submit">Add</button>
-      </form>
-    </>
+    <form onSubmit={handleAddTodo} className={style.label_container}>
+      <InputWithLabel
+        todoTitle={todoTitle}
+        handleTitleChange={handleTitleChange}
+      ></InputWithLabel>
+      <button type="submit" className={style.add_button}>
+        <AddIcon className={style.add_button} />
+      </button>
+    </form>
   );
+};
+
+AddTodoForm.propTypes = {
+  onAddTodo: PropTypes.func,
+  tableId: PropTypes.string,
 };
 
 export default AddTodoForm;
