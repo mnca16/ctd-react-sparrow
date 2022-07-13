@@ -1,6 +1,6 @@
-import React from "react";
-import TodoListItem from "./TodoListItem/TodoListItem";
-import PropTypes from "prop-types";
+import React from "react"
+import TodoListItem from "../TodoListItem/TodoListItem"
+import PropTypes from "prop-types"
 
 //This component renders the entire list
 const TodoList = ({
@@ -8,14 +8,13 @@ const TodoList = ({
   onRemoveTodo,
   onEditTodo,
   handleDescription,
-  tableId,
+  tableName,
   searchTerm,
   handleCheckBox,
 }) => {
-  console.log(handleCheckBox);
   const filteredList = todoList.filter((items) => {
-    return items.fields.Title.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+    return items.fields.Title.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
   return (
     <>
@@ -27,21 +26,21 @@ const TodoList = ({
             onRemoveTodo={onRemoveTodo}
             onEditTodo={onEditTodo}
             handleDescription={handleDescription}
-            tableId={tableId}
+            tableName={tableName}
             handleCheckBox={handleCheckBox}
           />
-        );
+        )
       })}
     </>
-  );
-};
+  )
+}
 
 TodoList.propType = {
   todoList: PropTypes.array,
   onRemoveTodo: PropTypes.func,
   onEditTodo: PropTypes.func,
   handleDescription: PropTypes.func,
-  tableId: PropTypes.string,
-};
+  tableName: PropTypes.string,
+}
 
-export default TodoList;
+export default TodoList

@@ -1,25 +1,22 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import styles from "./App.module.css";
-import TodoContainer from "./TodoContainer/TodoContainer";
-import NavMain from "./UI/NavMain";
-import SideBar from "./UI/SideVar/SideBar";
-// import ItemDescription from "./Components/ItemDescription";
+import React from "react"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import styles from "./App.module.css"
+import TodoContainer from "./TodoContainer/TodoContainer"
+import NavMain from "./UI/NavMain/NavMain.js"
+import SideBar from "./UI/SideVar/SideBar"
 
 const App = () => {
   //sidebar state
-  const [sideBar, setSideBar] = React.useState(false);
-  console.log(sideBar);
+  const [sideBar, setSideBar] = React.useState(false)
 
   //sidebar state for work and personal
-  const [currentLink, setCurrentLink] = React.useState("Work");
+  const [currentLink, setCurrentLink] = React.useState(false)
 
   //----------> Search Seaction (Navbar) <--------------//
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState("")
   const handleSearch = (e) => {
-    console.log("SEARCH NAV", e);
-    setSearchTerm(e.target.value);
-  };
+    setSearchTerm(e.target.value)
+  }
 
   return (
     <Router>
@@ -35,7 +32,8 @@ const App = () => {
           <SideBar
             sideBar={sideBar}
             onSideBar={setSideBar}
-            onCurrentLink={setCurrentLink}
+            setCurrentLink={setCurrentLink}
+            currentLink={currentLink}
           />
         </div>
         <div className={sideBar ? styles["todo_container"] : styles["active"]}>
@@ -46,7 +44,7 @@ const App = () => {
                 element={
                   <TodoContainer
                     sideBar={sideBar}
-                    tableId={"TodoList"}
+                    tableName={"TodoList"}
                     setCurrentLink={setCurrentLink}
                     searchTerm={searchTerm}
                   />
@@ -55,25 +53,30 @@ const App = () => {
               <Route
                 path="personal"
                 element={
-                  <TodoContainer tableId={"Personal"} searchTerm={searchTerm} />
+                  <TodoContainer
+                    tableName={"Personal"}
+                    searchTerm={searchTerm}
+                  />
                 }
               />
               <Route
                 path="work"
                 element={
-                  <TodoContainer tableId={"Work"} searchTerm={searchTerm} />
+                  <TodoContainer tableName={"Work"} searchTerm={searchTerm} />
                 }
               />
               <Route
                 path="chores"
-                element={<TodoContainer tableId={"Chores"} />}
+                element={
+                  <TodoContainer tableName={"Chores"} searchTerm={searchTerm} />
+                }
               />
             </Routes>
           </div>
         </div>
       </div>
     </Router>
-  );
-};
+  )
+}
 
-export default App;
+export default App

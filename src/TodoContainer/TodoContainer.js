@@ -1,226 +1,137 @@
-import React from "react";
-import AddTodoForm from "./Components/AddTodoForm/AddTodoForm";
-import TodoList from "./Components/TodoList";
-import ItemDescription from "./Components/ItemDescription/ItemDescription";
-import Search from "./Components/Search/Search";
-import style from "./TodoContainer.module.css";
-import PropTypes from "prop-types";
-import { ReactComponent as SortButton } from "./Components/IconsComponents/sort.svg";
+import React from "react"
+import AddTodoForm from "./Components/AddTodoForm/AddTodoForm"
+import TodoList from "./Components/TodoList/TodoList.js"
+import ItemDescription from "./Components/ItemDescription/ItemDescription"
+import style from "./TodoContainer.module.css"
+import PropTypes from "prop-types"
+import {
+  fetchRequestAddTodo,
+  fetchRequestDeleteTodo,
+  fetchRequestEditTodo,
+  fetchRequestEditDescription,
+  fetchRequestSortData,
+} from "./API"
+import { ReactComponent as SortButton } from "./Components/IconsComponents/sort.svg"
 
-const TodoContainer = ({ tableId, setCurrentLink, sideBar, searchTerm }) => {
-  console.log(searchTerm);
-  //This state renders our list, and saved the value in the local storage
-  //Pass information down to the TodoList component
-  const [todoList, setTodoList] = React.useState([]);
+const TodoContainer = ({ tableName, sideBar, searchTerm, setCurrentLink }) => {
+  const [todoList, setTodoList] = React.useState([])
+  const [isLoading, setIsloading] = React.useState(true)
+  const [direction, setDirection] = React.useState("asc")
+  const [itemDescription, setItemDescription] = React.useState("") //gets the id from the child component
+  const [showDescription, setShowDescription] = React.useState(false) //hides description with notebutton
 
-  //conditional renderting state
-  const [isLoading, setIsloading] = React.useState(true);
-
-  //Airtable APIs with the fetch method:
-  //GET
-  //const reqUrl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}?view=Grid%20view&sort[0][field]=Title&sort[0][direction]=asc`;
+  //Get List
   React.useEffect(() => {
-    const reqUrl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}?view=Grid%20view`;
+    const reqUrl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableName}?view=Grid%20view`
     const optionsGet = {
       headers: {
         Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
       },
-    };
+    }
     fetch(reqUrl, optionsGet)
-      .then((result) => {
-        return result.json();
+      .then((response) => {
+        if (response.ok) {
+          console.log("HTTP request successful")
+        }
+        return response
       })
       .then((result) => {
-        setTodoList(result.records);
-        setIsloading(false);
-      });
-  }, []);
+        return result.json()
+      })
+      .then((result) => {
+        setTodoList(result.records)
+        setIsloading(false)
+      })
+      .catch((error) => console.log(error))
+  }, [tableName])
 
-  //Sort section: I used a function that would change the
-  const [direction, setDirection] = React.useState("asc");
-  console.log(direction);
+  //-----------> Sort Section <--------------//
   const handleSort = () => {
-    const sortDirection = direction === "desc" ? "asc" : "desc";
-    setDirection(sortDirection);
-    requestSortedList();
-  };
-  // useEffect for soting the data
-  // React.useEffect(() => {
+    const sortDirection = direction === "desc" ? "asc" : "desc"
+    setDirection(sortDirection)
+    requestSortedList()
+  }
   const requestSortedList = () => {
-    const reqUrl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}?view=Grid%20view&sort[0][field]=Title&sort[0][direction]=${direction}`;
-    const optionsGet = {
-      headers: {
-        Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
-      },
-    };
-    fetch(reqUrl, optionsGet)
-      .then((result) => {
-        return result.json();
-      })
-      .then((result) => {
-        setTodoList(result.records);
-      });
-    setIsloading(false);
-  };
-  // }, [direction]);
+    fetchRequestSortData(tableName, direction).then((result) => {
+      setTodoList(result.records)
+    })
+    setIsloading(false)
+  }
 
-  // POST method
-  //Lift state
-  const addTodo = (newTodo, tableId) => {
-    fetch(
-      `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ records: [newTodo] }),
+  // -------------> Add Section <------------//
+  //Lift state and used spread to copy old object
+  const addTodo = (newTodo, tableName) => {
+    fetchRequestAddTodo(newTodo, tableName).then((data) => {
+      setTodoList([...todoList, ...data.records])
+    })
+  }
+
+  //-----------> Delete Section <------------//
+  //lifted state and filter the data
+  const removeTodo = (id, tableName) => {
+    fetchRequestDeleteTodo(id, tableName).then((data) => {
+      const removedItem = todoList.filter((todo) => todo.id !== data.id)
+      setTodoList(removedItem)
+    })
+  }
+
+  //--------------> Edit Section <-------------//
+  //Map the response and add new data from the user
+  const editTodo = (id, newEditTodo, tableName) => {
+    fetchRequestEditTodo(id, newEditTodo, tableName).then((data) => {
+      //make a new list
+      const editedTodoList = todoList.map((todoItem) => {
+        if (todoItem.id === data.id) {
+          return {
+            ...todoItem,
+            fields: {
+              ...todoItem.fields,
+              Title: data.fields.Title,
+              Description: data.fields.Description,
+            },
+          }
+        }
+        return todoItem
+      })
+      setTodoList(editedTodoList)
+    })
+  }
+
+  /* -----------> Item description Section <----------*/
+  const editDescription = (id, newEditDescription, tableName) => {
+    fetchRequestEditDescription(id, newEditDescription, tableName).then(
+      (data) => {
+        const editedTodoList = todoList.map((todoItem) => {
+          if (todoItem.id === data.id) {
+            return {
+              ...todoItem,
+              fields: {
+                ...todoItem.fields,
+                Title: data.fields.Title,
+                Description: data.fields.Description,
+              },
+            }
+          }
+          return todoItem
+        })
+        setTodoList(editedTodoList)
       }
     )
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        setTodoList([...todoList, ...data.records]);
-      })
-      .then((response) => {
-        console.log("Success:", response);
-      })
-      .catch((error) => {
-        console.log("Error:", error);
-      });
-  };
-
-  //DeLETE method
-  //lifted state and filter the data
-  const removeTodo = (id, tableId) => {
-    const DELETEurl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}/${id}`;
-
-    fetch(DELETEurl, {
-      method: "Delete",
-      headers: {
-        Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
-      },
-    });
-    //.then((response) => {
-    //   console.log(response);
-    //   response.json();
-    // });
-    // .then((data) => {
-    //   console.log(data);
-    //Question what do I do with the response?
-    const removedItem = todoList.filter((todo) => todo.id !== id);
-    setTodoList(removedItem);
-    // });
-  };
-
-  //PATCH method
-  //Map the response and add new data from the user
-  const editTodo = (id, newEditTodo, tableId) => {
-    console.log("new edit todo", newEditTodo);
-    const EDITurl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}/${id}`;
-
-    fetch(EDITurl, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newEditTodo),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data);
-        //make a new list
-        const editedTodoList = todoList.map((todoItem) => {
-          if (todoItem.id === data.id) {
-            return {
-              ...todoItem,
-              fields: {
-                ...todoItem.fields,
-                Title: data.fields.Title,
-                Description: data.fields.Description,
-              },
-            };
-          }
-          return todoItem;
-        });
-        setTodoList(editedTodoList);
-      });
-  };
-
-  /* -----------> Item description section <----------*/
-  //PATCH method for ItemDescription
-  const editDescription = (id, newEditDescription, tableId) => {
-    console.log("new edit todo", newEditDescription);
-    const EDITurl = `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/${tableId}/${id}`;
-
-    fetch(EDITurl, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newEditDescription),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data);
-        //make a new list with different description
-        const editedTodoList = todoList.map((todoItem) => {
-          if (todoItem.id === data.id) {
-            return {
-              ...todoItem,
-              fields: {
-                ...todoItem.fields,
-                Title: data.fields.Title,
-                Description: data.fields.Description,
-              },
-            };
-          }
-          return todoItem;
-        });
-        setTodoList(editedTodoList);
-      });
-  };
-
-  const [itemDescription, setItemDescription] = React.useState(""); //gets the id from the child component
-  const [showDescription, setShowDescription] = React.useState(false); //hides description with notebutton
-
+  }
   const handleDescription = (id) => {
-    setShowDescription(!showDescription);
-    setItemDescription(id);
-  };
-
-  /*--------> Checkbox Sectiom <----------*/
-  //To do:
-  //Try to link this to airtable
-  const handleCheckBox = (id) => {
-    const newTodoList = todoList.map((todo) => {
-      if (todo.id === id)
-        return {
-          ...todo,
-          done: !todo.done,
-        };
-      return todo;
-    });
-    setTodoList(newTodoList);
-    console.log(newTodoList);
-  };
+    setShowDescription(!showDescription)
+    setItemDescription(id)
+  }
 
   return (
     <div className={sideBar ? style["todo_container"] : style["active"]}>
       <div className={style.split_box}>
         <div className={style.left_pane}>
-          <h5 className={style.tableId}>{tableId}</h5>
+          <h5 className={style.tableId}>{tableName}</h5>
           <AddTodoForm
             onAddTodo={addTodo}
             todoList={todoList}
-            tableId={tableId}
+            tableName={tableName}
           />
           <SortButton className={style.sort_button} onClick={handleSort} />
           {isLoading ? (
@@ -232,15 +143,14 @@ const TodoContainer = ({ tableId, setCurrentLink, sideBar, searchTerm }) => {
               onRemoveTodo={removeTodo}
               onEditTodo={editTodo}
               handleDescription={handleDescription}
-              tableId={tableId}
-              handleCheckBox={handleCheckBox}
+              tableName={tableName}
             />
           )}
         </div>
         {showDescription ? (
           <div className={style.right_pane}>
             <ItemDescription
-              tableId={tableId}
+              tableName={tableName}
               todoList={todoList}
               itemDescription={itemDescription}
               onEditDescription={editDescription}
@@ -250,12 +160,12 @@ const TodoContainer = ({ tableId, setCurrentLink, sideBar, searchTerm }) => {
         ) : null}
       </div>
     </div>
-  );
-};
+  )
+}
 
 TodoContainer.propTypes = {
-  tableId: PropTypes.string,
-  setCurrentLink: PropTypes.func, // This is supposed to be a string
+  tableName: PropTypes.string,
+  setCurrentLink: PropTypes.func,
   sideBar: PropTypes.bool,
-};
-export default TodoContainer;
+}
+export default TodoContainer
